@@ -164,7 +164,7 @@ This is my first contribution to claude-flow. No related issues exist yet.
 
 ## Author
 
-Mattae Cooper @aegntic.ai (first-time contributor)
+Mattae Cooper [research@aegntic.ai] (first-time contributor)
 
 ## License
 

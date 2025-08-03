@@ -4,7 +4,7 @@
  * Extends the hive-mind system with Graphiti's knowledge graph capabilities
  * for enhanced collective intelligence and persistent shared memory.
  * 
- * @author Mattae Cooper @aegntic.ai
+ * @author Mattae Cooper [research@aegntic.ai]
  * @since v2.0.0-alpha
  */
 

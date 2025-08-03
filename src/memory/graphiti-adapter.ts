@@ -5,7 +5,7 @@
  * memory and hive-mind systems, enabling persistent, queryable memory
  * with rich relationships and temporal metadata.
  * 
- * @author Mattae Cooper @aegntic.ai
+ * @author Mattae Cooper [research@aegntic.ai]
  * @since v2.0.0-alpha
  */
 
