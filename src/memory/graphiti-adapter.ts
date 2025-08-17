@@ -161,6 +161,132 @@ export class GraphitiMemoryAdapter extends EventEmitter {
   }
 
   /**
+   * Record operation latency and update metrics
+   * Implements ruvnet's suggestion for performance monitoring
+   */
+  private recordLatency(operation: string, duration: number): void {
+    const latencies = this.metrics.operationLatency.get(operation) || [];
+    latencies.push(duration);
+    
+    // Keep only last 100 measurements for memory efficiency
+    if (latencies.length > 100) {
+      latencies.shift();
+    }
+    
+    this.metrics.operationLatency.set(operation, latencies);
+    this.metrics.lastUpdated = new Date();
+  }
+
+  /**
+   * Record operation success/failure
+   */
+  private recordOperation(operation: string, success: boolean): void {
+    if (success) {
+      const count = this.metrics.successCount.get(operation) || 0;
+      this.metrics.successCount.set(operation, count + 1);
+    } else {
+      const count = this.metrics.errorCount.get(operation) || 0;
+      this.metrics.errorCount.set(operation, count + 1);
+    }
+    this.metrics.lastUpdated = new Date();
+  }
+
+  /**
+   * Record retry attempt
+   */
+  private recordRetry(operation: string): void {
+    const count = this.metrics.retryCount.get(operation) || 0;
+    this.metrics.retryCount.set(operation, count + 1);
+    this.metrics.lastUpdated = new Date();
+  }
+
+  /**
+   * Retry logic with exponential backoff
+   * Implements ruvnet's suggestion for network operation retry logic
+   */
+  private async retryOperation<T>(
+    operation: string,
+    fn: () => Promise<T>,
+    options?: Partial<RetryOptions>
+  ): Promise<T> {
+    const config = { ...this.retryOptions, ...options };
+    let lastError: Error;
+    
+    for (let attempt = 1; attempt <= config.maxAttempts; attempt++) {
+      try {
+        const startTime = Date.now();
+        const result = await fn();
+        this.recordLatency(operation, Date.now() - startTime);
+        this.recordOperation(operation, true);
+        return result;
+      } catch (error) {
+        lastError = error as Error;
+        this.recordOperation(operation, false);
+        
+        if (attempt < config.maxAttempts) {
+          this.recordRetry(operation);
+          const delay = Math.min(
+            config.baseDelay * Math.pow(config.backoffMultiplier, attempt - 1),
+            config.maxDelay
+          );
+          
+          this.logger?.warn(`${operation} failed (attempt ${attempt}/${config.maxAttempts}), retrying in ${delay}ms`, error);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+    
+    this.logger?.error(`${operation} failed after ${config.maxAttempts} attempts`, lastError);
+    throw lastError;
+  }
+
+  /**
+   * Get performance metrics
+   * Allows monitoring of adapter performance as suggested by ruvnet
+   */
+  getMetrics(): {
+    latency: Record<string, { avg: number; min: number; max: number; count: number }>;
+    operations: Record<string, { success: number; errors: number; retries: number }>;
+    lastUpdated: Date;
+  } {
+    const latency: Record<string, any> = {};
+    const operations: Record<string, any> = {};
+    
+    // Calculate latency statistics
+    for (const [operation, latencies] of this.metrics.operationLatency) {
+      if (latencies.length > 0) {
+        latency[operation] = {
+          avg: latencies.reduce((sum, val) => sum + val, 0) / latencies.length,
+          min: Math.min(...latencies),
+          max: Math.max(...latencies),
+          count: latencies.length
+        };
+      }
+    }
+    
+    // Combine operation statistics
+    const allOperations = new Set([
+      ...this.metrics.successCount.keys(),
+      ...this.metrics.errorCount.keys(),
+      ...this.metrics.retryCount.keys()
+    ]);
+    
+    for (const operation of allOperations) {
+      operations[operation] = {
+        success: this.metrics.successCount.get(operation) || 0,
+        errors: this.metrics.errorCount.get(operation) || 0,
+        retries: this.metrics.retryCount.get(operation) || 0
+      };
+    }
+    
+    return {
+      latency,
+      operations,
+      lastUpdated: this.metrics.lastUpdated
+    };
+  }
+
+  /**
    * Add an episode to Graphiti's knowledge graph
    */
   async addMemory(
