@@ -732,6 +732,30 @@ class ClaudeFlowMCPServer {
           required: ['action'],
         },
       },
+      workflow_status: {
+        name: 'workflow_status',
+        description: 'Get detailed workflow execution status and metadata',
+        inputSchema: {
+          type: 'object',
+          properties: { 
+            workflowId: { type: 'string' },
+            executionId: { type: 'string' },
+            includeMetadata: { type: 'boolean', default: true }
+          },
+        },
+      },
+      workflow_validate: {
+        name: 'workflow_validate',
+        description: 'Validate workflow definitions and compatibility',
+        inputSchema: {
+          type: 'object',
+          properties: { 
+            workflowId: { type: 'string' },
+            definition: { type: 'object' },
+            targetPlatform: { type: 'string', enum: ['github-actions', 'gitlab-ci', 'generic'], default: 'github-actions' }
+          },
+        },
+      },
       batch_process: {
         name: 'batch_process',
         description: 'Batch processing',
