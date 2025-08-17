@@ -64,6 +64,84 @@ export interface RetryOptions {
   backoffMultiplier: number;
 }
 
+export interface CacheEntry<T> {
+  value: T;
+  lastAccessed: Date;
+  accessCount: number;
+}
+
+export class LRUCache<T> {
+  private cache = new Map<string, CacheEntry<T>>();
+  private maxSize: number;
+
+  constructor(maxSize: number = 100) {
+    this.maxSize = maxSize;
+  }
+
+  get(key: string): T | undefined {
+    const entry = this.cache.get(key);
+    if (entry) {
+      entry.lastAccessed = new Date();
+      entry.accessCount++;
+      return entry.value;
+    }
+    return undefined;
+  }
+
+  set(key: string, value: T): void {
+    if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
+      // Remove least recently used item
+      let lruKey: string | undefined;
+      let lruTime = new Date();
+      
+      for (const [k, entry] of this.cache.entries()) {
+        if (entry.lastAccessed < lruTime) {
+          lruTime = entry.lastAccessed;
+          lruKey = k;
+        }
+      }
+      
+      if (lruKey) {
+        this.cache.delete(lruKey);
+      }
+    }
+
+    this.cache.set(key, {
+      value,
+      lastAccessed: new Date(),
+      accessCount: 1
+    });
+  }
+
+  has(key: string): boolean {
+    return this.cache.has(key);
+  }
+
+  delete(key: string): boolean {
+    return this.cache.delete(key);
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  size(): number {
+    return this.cache.size;
+  }
+
+  getStats(): { size: number; maxSize: number; hitRate: number } {
+    const totalAccess = Array.from(this.cache.values())
+      .reduce((sum, entry) => sum + entry.accessCount, 0);
+    const hitRate = totalAccess > 0 ? this.cache.size / totalAccess : 0;
+    
+    return {
+      size: this.cache.size,
+      maxSize: this.maxSize,
+      hitRate
+    };
+  }
+}
+
 export interface GraphitiEpisode {
   uuid: string;
   name: string;
