@@ -184,6 +184,10 @@ export class GraphitiMemoryAdapter extends EventEmitter {
     maxDelay: 10000,
     backoffMultiplier: 2
   };
+  
+  // LRU cache for frequently accessed knowledge (implementing ruvnet's suggestion)
+  private knowledgeCache = new LRUCache<GraphitiNode[]>(200);
+  private queryCache = new LRUCache<SearchResult[]>(100);
 
   constructor(config: GraphitiConfig, logger?: ILogger) {
     super();
