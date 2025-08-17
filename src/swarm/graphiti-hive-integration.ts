@@ -78,6 +78,10 @@ export class GraphitiHiveIntegration extends EventEmitter {
       minPatternConfidence: 0.7,
       insightGenerationInterval: 60000, // 1 minute
       knowledgeEvolutionThreshold: 0.8,
+      // Configurable sync intervals (implementing ruvnet's suggestion)
+      patternSyncInterval: 30000, // 30 seconds
+      knowledgeEvolutionInterval: 120000, // 2 minutes
+      hiveMindSyncInterval: 45000, // 45 seconds
       ...config
     };
     this.logger = logger;
