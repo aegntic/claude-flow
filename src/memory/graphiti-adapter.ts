@@ -89,6 +89,23 @@ export class GraphitiMemoryAdapter extends EventEmitter {
   private episodeQueue: Map<string, GraphitiEpisode[]> = new Map();
   private nodeCache: Map<string, GraphitiNode> = new Map();
   private edgeCache: Map<string, GraphitiEdge> = new Map();
+  
+  // Performance monitoring (implementing ruvnet's suggestion)
+  private metrics: GraphitiMetrics = {
+    operationLatency: new Map(),
+    successCount: new Map(),
+    errorCount: new Map(),
+    retryCount: new Map(),
+    lastUpdated: new Date()
+  };
+  
+  // Retry configuration (implementing ruvnet's suggestion)
+  private retryOptions: RetryOptions = {
+    maxAttempts: 3,
+    baseDelay: 1000,
+    maxDelay: 10000,
+    backoffMultiplier: 2
+  };
 
   constructor(config: GraphitiConfig, logger?: ILogger) {
     super();
