@@ -27,6 +27,10 @@ export interface GraphitiHiveConfig {
   minPatternConfidence: number;
   insightGenerationInterval: number;
   knowledgeEvolutionThreshold: number;
+  // Configurable sync intervals (implementing ruvnet's suggestion)
+  patternSyncInterval: number;
+  knowledgeEvolutionInterval: number;
+  hiveMindSyncInterval: number;
 }
 
 export interface GraphitiPattern extends Pattern {
