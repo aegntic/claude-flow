@@ -314,9 +314,9 @@ export class GraphitiMemoryAdapter extends EventEmitter {
     groupQueue.push(episode);
     this.episodeQueue.set(episode.groupId, groupQueue);
 
-    // If connected to Graphiti, add immediately
+    // If connected to Graphiti, add immediately with retry logic
     if (this.isConnected) {
-      await this.flushEpisode(episode);
+      await this.retryOperation('addMemory', () => this.flushEpisode(episode));
     }
 
     this.emit('memory:added', episode);
