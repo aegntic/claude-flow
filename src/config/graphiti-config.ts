@@ -120,4 +120,87 @@ export async function getGraphitiConfig(): Promise<GraphitiConfiguration> {
   return config;
 }
 
+// Zod schema for configuration validation (as suggested by ruvnet)
+export const GraphitiConfigSchema = z.object({
+  enabled: z.boolean(),
+  mcp: z.object({
+    serverName: z.string().min(1, 'MCP server name cannot be empty'),
+    available: z.boolean(),
+  }),
+  memory: z.object({
+    adapter: z.object({
+      enabled: z.boolean(),
+      defaultGroupId: z.string().min(1, 'Default group ID cannot be empty'),
+      maxNodes: z.number().positive('Max nodes must be positive'),
+      maxFacts: z.number().positive('Max facts must be positive'),
+      enableAutoSync: z.boolean(),
+      syncInterval: z.number().min(1000, 'Sync interval must be at least 1 second'),
+      enableTemporalTracking: z.boolean(),
+      knowledgeRetentionDays: z.number().positive('Knowledge retention days must be positive'),
+    }),
+  }),
+  hiveMind: z.object({
+    integration: z.object({
+      enabled: z.boolean(),
+      enablePatternExtraction: z.boolean(),
+      enableInsightGeneration: z.boolean(),
+      enableKnowledgeEvolution: z.boolean(),
+      graphGroupPrefix: z.string().min(1, 'Graph group prefix cannot be empty'),
+      minPatternConfidence: z.number().min(0).max(1, 'Pattern confidence must be between 0 and 1'),
+      insightGenerationInterval: z.number().min(1000, 'Insight generation interval must be at least 1 second'),
+      knowledgeEvolutionThreshold: z.number().min(0).max(1, 'Knowledge evolution threshold must be between 0 and 1'),
+    }),
+  }),
+  features: z.object({
+    episodeProcessing: z.boolean(),
+    nodeRelationships: z.boolean(),
+    temporalReasoning: z.boolean(),
+    collectiveIntelligence: z.boolean(),
+    knowledgeSharing: z.boolean(),
+    patternRecognition: z.boolean(),
+    insightGeneration: z.boolean(),
+  }),
+});
+
+/**
+ * Validate Graphiti configuration with schema validation
+ * Implements ruvnet's suggestion for configuration validation
+ */
+export function validateGraphitiConfig(config: unknown): GraphitiConfiguration {
+  try {
+    return GraphitiConfigSchema.parse(config);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const issues = error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ');
+      throw new Error(`Invalid Graphiti configuration: ${issues}`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Sanitize connection strings and sensitive data
+ * Implements ruvnet's suggestion for connection string sanitization
+ */
+export function sanitizeGraphitiConfig(config: GraphitiConfiguration): GraphitiConfiguration {
+  const sanitized = JSON.parse(JSON.stringify(config));
+  
+  // Sanitize any potential connection strings or sensitive data
+  if (sanitized.mcp?.serverName) {
+    // Remove any potential credentials from server names
+    sanitized.mcp.serverName = sanitized.mcp.serverName.replace(/\/\/.*:.*@/g, '//***:***@');
+  }
+  
+  // Ensure group IDs are safe
+  sanitized.memory.adapter.defaultGroupId = sanitized.memory.adapter.defaultGroupId
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .toLowerCase();
+  
+  sanitized.hiveMind.integration.graphGroupPrefix = sanitized.hiveMind.integration.graphGroupPrefix
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .toLowerCase();
+  
+  return sanitized;
+}
+
 export default defaultGraphitiConfig;
