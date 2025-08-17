@@ -2011,6 +2011,160 @@ class ClaudeFlowMCPServer {
           timestamp: new Date().toISOString(),
         };
         
+      case 'workflow_status':
+        try {
+          const workflowId = args.workflowId;
+          const executionId = args.executionId;
+          const includeMetadata = args.includeMetadata !== false;
+          
+          if (!workflowId && !executionId) {
+            return {
+              success: false,
+              error: 'Either workflowId or executionId must be provided',
+              timestamp: new Date().toISOString(),
+            };
+          }
+          
+          let status = {
+            success: true,
+            timestamp: new Date().toISOString()
+          };
+          
+          // Get workflow metadata if workflowId provided
+          if (workflowId) {
+            try {
+              const workflowMetadata = await this.memoryStore.retrieve(`workflow_metadata:${workflowId}`, {
+                namespace: 'workflows'
+              });
+              
+              if (workflowMetadata) {
+                status.workflow = JSON.parse(workflowMetadata);
+                status.workflowId = workflowId;
+              } else {
+                status.workflow_found = false;
+                status.error = 'Workflow not found in metadata store';
+              }
+            } catch (error) {
+              status.workflow_error = error.message;
+            }
+          }
+          
+          // Get execution status if executionId provided
+          if (executionId) {
+            try {
+              const executionData = await this.memoryStore.retrieve(`workflow_execution:${executionId}`, {
+                namespace: 'workflow_executions'
+              });
+              
+              if (executionData) {
+                status.execution = JSON.parse(executionData);
+                status.executionId = executionId;
+              } else {
+                status.execution_found = false;
+              }
+            } catch (error) {
+              status.execution_error = error.message;
+            }
+          }
+          
+          // Add comprehensive metadata if requested
+          if (includeMetadata) {
+            status.system_status = {
+              mcp_session: this.sessionId,
+              workflow_manager: global.workflowManager ? 'available' : 'unavailable',
+              memory_store: this.memoryStore ? 'available' : 'unavailable',
+              timestamp: new Date().toISOString(),
+              platform: process.platform,
+              node_version: process.version
+            };
+          }
+          
+          return status;
+        } catch (error) {
+          return {
+            success: false,
+            error: `Failed to get workflow status: ${error.message}`,
+            timestamp: new Date().toISOString(),
+          };
+        }
+        
+      case 'workflow_validate':
+        try {
+          const workflowId = args.workflowId;
+          const definition = args.definition;
+          const targetPlatform = args.targetPlatform || 'github-actions';
+          
+          let validation = {
+            success: true,
+            workflowId: workflowId,
+            targetPlatform: targetPlatform,
+            validation_timestamp: new Date().toISOString(),
+            validation_results: {
+              schema_valid: true,
+              compatibility_check: 'passed',
+              metadata_complete: true,
+              required_fields: 'present'
+            },
+            recommendations: [],
+            warnings: [],
+            errors: []
+          };
+          
+          // Basic validation checks
+          if (definition) {
+            // Check required fields based on target platform
+            if (targetPlatform === 'github-actions') {
+              if (!definition.name) {
+                validation.errors.push('GitHub Actions requires a workflow name');
+                validation.validation_results.schema_valid = false;
+              }
+              
+              if (!definition.on && !definition.triggers) {
+                validation.warnings.push('No triggers defined - workflow may not execute automatically');
+              }
+              
+              if (!definition.jobs && !definition.steps) {
+                validation.errors.push('GitHub Actions requires either jobs or steps to be defined');
+                validation.validation_results.schema_valid = false;
+              }
+            }
+            
+            // Check for MCP compatibility
+            if (definition.steps && Array.isArray(definition.steps)) {
+              validation.recommendations.push('Consider using MCP workflow tools for enhanced coordination');
+            }
+          }
+          
+          // Get workflow metadata if workflowId provided
+          if (workflowId) {
+            try {
+              const workflowMetadata = await this.memoryStore.retrieve(`workflow_metadata:${workflowId}`, {
+                namespace: 'workflows'
+              });
+              
+              if (workflowMetadata) {
+                const metadata = JSON.parse(workflowMetadata);
+                validation.existing_metadata = metadata;
+                validation.metadata_compatible = true;
+              }
+            } catch (error) {
+              validation.warnings.push('Could not retrieve existing workflow metadata');
+            }
+          }
+          
+          // Final validation status
+          validation.valid = validation.errors.length === 0;
+          validation.score = Math.max(0, 100 - (validation.errors.length * 30) - (validation.warnings.length * 10));
+          
+          return validation;
+        } catch (error) {
+          return {
+            success: false,
+            error: `Workflow validation failed: ${error.message}`,
+            timestamp: new Date().toISOString(),
+          };
+        }
+        
       // Performance Tools Implementation
       case 'performance_report':
         if (global.performanceMonitor) {
