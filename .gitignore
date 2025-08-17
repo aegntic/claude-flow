@@ -48,6 +48,16 @@ tests/results/
 tests/logs/
 *.lcov
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+*.egg
+
 # Test outputs
 output/
 api-project/
@@ -123,3 +133,4 @@ claude-flow
 claude-flow.bat
 claude-flow.ps1
 hive-mind-prompt-*.txt
+.claude-flow/

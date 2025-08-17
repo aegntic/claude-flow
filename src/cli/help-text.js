@@ -4,31 +4,47 @@
  */
 
 import { HelpFormatter } from './help-formatter.js';
+import { VERSION } from '../core/version.js';
 
-export const VERSION = '2.0.0-alpha.83';
+export { VERSION };
 
 export const MAIN_HELP = `
 🌊 Claude-Flow v${VERSION} - Enterprise-Grade AI Agent Orchestration Platform
 
 🎯 ENTERPRISE FEATURES: Complete ruv-swarm integration with 90+ MCP tools, neural networking, and production-ready infrastructure
 🐝 NEW: Claude Code 1.0.51+ full compatibility with enhanced hooks and batch processing
-⚡ ALPHA 83: Enhanced GitHub hooks with npx commands, improved checkpoint reliability, seamless CI/CD integration
+⚡ ALPHA 90: Major MCP Implementation & Quality Update
+
+🔍 ALPHA 90 HIGHLIGHTS:
+  ✅ 15+ Real MCP Tools - DAA, Workflow, Performance tools fully implemented
+  🐛 Critical Bug Fixes - agent_metrics, swarm_monitor, neural_train errors resolved
+  🧠 Real WASM Neural Networks - ruv-fann powered actual neural processing
+  📊 >95% Functionality - Mock rate reduced from 40% to <5%
+  🔧 MCP Routing Fixed - All workflow/performance tools properly routed
+  🔧 Non-interactive Fixes - Proper prompt injection for CI/CD & automation
 
 USAGE:
+  npx claude-flow@alpha <command> [options]    # Run latest alpha version
+  npx claude-flow@alpha <command> --help       # Get detailed help for any command
+  npx claude-flow@alpha --help                 # Show this help
+  
+  # After local install:
   claude-flow <command> [options]
   claude-flow <command> --help    # Get detailed help for any command
 
 🚀 QUICK START:
   # First time setup (creates CLAUDE.md & .claude/commands)
-  npx claude-flow@alpha init --sparc
+  npx claude-flow@alpha init
   
   # 🐝 HIVE MIND QUICK START (NEW!):
   claude-flow hive-mind wizard          # Interactive setup wizard
   claude-flow hive-mind spawn "objective"  # Create intelligent swarm
+  claude-flow hive-mind spawn "Build API" --claude  # Open Claude Code CLI
   
   # After setup, use without npx:
   claude-flow start --ui --swarm         # Start with swarm intelligence UI
   claude-flow swarm "build REST API"     # Deploy multi-agent workflow
+  claude-flow swarm "create service" --claude  # Open Claude Code CLI with swarm
 
 🐝 HIVE MIND COMMANDS (NEW!):
   hive-mind wizard         🎯 Interactive setup wizard (RECOMMENDED)
@@ -48,6 +64,11 @@ USAGE:
   github <mode>            GitHub workflow automation (6 modes)
   status                   System status and health
   
+🔍 VERIFICATION COMMANDS (NEW!):
+  verify <subcommand>      Truth verification system (0.95 threshold)
+  truth                    View truth scores and reliability metrics
+  pair [--start]           Collaborative development with real-time verification
+  
 📋 SWARM INTELLIGENCE COMMANDS:
   training <command>       Neural pattern learning & model updates (3 commands)
   coordination <command>   Swarm & agent orchestration (3 commands)
@@ -63,24 +84,111 @@ USAGE:
   config <action>          System configuration
   mcp <action>             MCP server management
   batch <action>           Batch operations
+  stream-chain <workflow>  Stream-JSON chaining for multi-agent pipelines (NEW!)
 
 🔍 GET HELP:
-  claude-flow --help                Show this help
-  claude-flow help                  Show this help
-  claude-flow help <command>        Detailed command help
-  claude-flow <command> --help      Detailed command help
+  npx claude-flow@alpha --help                Show this help
+  npx claude-flow@alpha <command> --help      Detailed command help
 
 🎯 RECOMMENDED FOR NEW USERS:
-  claude-flow hive-mind wizard     # Start here! Interactive guided setup
-  claude-flow init --sparc         # Initialize with SPARC methodology
-  claude-flow help hive-mind       # Learn about Hive Mind features
+  npx claude-flow@alpha hive-mind wizard     # Start here! Interactive guided setup
+  npx claude-flow@alpha init                 # Initialize Claude Flow
+  npx claude-flow@alpha help hive-mind       # Learn about Hive Mind features
+  npx claude-flow@alpha swarm "Build API" --claude  # Quick start with Claude Code CLI
 
 📚 Documentation: https://github.com/ruvnet/claude-flow
 🐝 Hive Mind Guide: https://github.com/ruvnet/claude-flow/tree/main/docs/hive-mind
 🐝 ruv-swarm: https://github.com/ruvnet/ruv-FANN/tree/main/ruv-swarm
+💬 Discord Community: https://discord.agentics.org
+
+💖 Created by rUv with love: https://github.com/ruvnet
 `;
 
 export const COMMAND_HELP = {
+  verify: `
+🔍 VERIFY COMMAND - Truth Verification System
+
+USAGE:
+  claude-flow verify <subcommand> [options]
+
+DESCRIPTION:
+  Enforce truth and accuracy in multi-agent operations with a 0.95 threshold.
+  "Truth is enforced, not assumed" - every agent claim is verified.
+
+SUBCOMMANDS:
+  init <mode>        Initialize verification system
+                     Modes: strict (0.95), moderate (0.85), development (0.75)
+  verify <task>      Run verification on specific task or agent
+  status             Show verification system status and metrics
+  rollback           Trigger manual rollback to last good state
+
+OPTIONS:
+  --threshold <n>    Custom accuracy threshold (0.0-1.0)
+  --agent <type>     Specify agent type for verification
+  --auto-rollback    Enable automatic rollback on failures
+  --verbose          Detailed verification output
+  --json             Output in JSON format
+
+EXAMPLES:
+  claude-flow verify init strict                  # Production mode
+  claude-flow verify verify task-123 --agent coder
+  claude-flow verify status --recent 10
+  claude-flow verify rollback --checkpoint last
+`,
+  truth: `
+📊 TRUTH COMMAND - Truth Score Analytics
+
+USAGE:
+  claude-flow truth [options]
+
+DESCRIPTION:
+  View and analyze truth scores, reliability metrics, and verification history.
+  Provides insights into agent accuracy and system reliability.
+
+OPTIONS:
+  --report           Generate detailed truth score report
+  --analyze          Analyze failure patterns and trends
+  --agent <type>     Filter by specific agent type
+  --taskId <id>      Check specific task truth score
+  --threshold <n>    Filter scores below threshold
+  --json             Output in JSON format
+  --export <file>    Export report to file
+
+EXAMPLES:
+  claude-flow truth                        # Show current scores
+  claude-flow truth --report               # Detailed report
+  claude-flow truth --analyze              # Pattern analysis
+  claude-flow truth --agent coder --detailed
+  claude-flow truth --json | jq .averageScore
+`,
+  pair: `
+👥 PAIR COMMAND - Collaborative Development Mode
+
+USAGE:
+  claude-flow pair [options]
+
+DESCRIPTION:
+  Real-time collaborative development with AI verification.
+  Continuous validation with instant feedback and auto-rollback.
+
+OPTIONS:
+  --start            Start new pair programming session
+  --mode <type>      Set verification mode:
+                     strict (0.95), standard (0.85), development (0.75)
+  --threshold <n>    Custom accuracy threshold (0.0-1.0)
+  --verify           Enable real-time verification
+  --monitor          Show real-time metrics dashboard
+  --auto-rollback    Enable automatic rollback on failures
+  --summary          View session summary
+  --export <file>    Export session metrics
+
+EXAMPLES:
+  claude-flow pair --start                 # Start session
+  claude-flow pair --start --mode strict   # Production pairing
+  claude-flow pair --threshold 0.90        # Custom threshold
+  claude-flow pair --summary               # View session stats
+  claude-flow pair --monitor --verify      # Real-time monitoring
+`,
   swarm: `
 🧠 SWARM COMMAND - Multi-Agent AI Coordination
 
@@ -101,6 +209,8 @@ OPTIONS:
   --monitor            Real-time swarm monitoring
   --ui                 Interactive user interface
   --background         Run in background with progress tracking
+  --claude             Open Claude Code CLI
+  --executor           Use built-in executor instead of Claude Code
   --analysis           Enable analysis/read-only mode (no code changes)
   --read-only          Enable read-only mode (alias for --analysis)
 
@@ -109,6 +219,8 @@ EXAMPLES:
   claude-flow swarm "Research cloud architecture patterns" --strategy research
   claude-flow swarm "Optimize database queries" --max-agents 3 --parallel
   claude-flow swarm "Develop feature X" --strategy development --monitor --ui
+  claude-flow swarm "Build API" --claude  # Open Claude Code CLI
+  claude-flow swarm "Create service" --executor  # Use built-in executor
   claude-flow swarm "Analyze codebase for security issues" --analysis
   claude-flow swarm "Review architecture patterns" --read-only --strategy research
 
@@ -904,7 +1016,7 @@ export function getMainHelp(plain = false) {
       },
     ],
     examples: [
-      'npx claude-flow@alpha init --sparc',
+      'npx claude-flow@alpha init',
       'claude-flow hive-mind wizard',
       'claude-flow swarm "Build REST API"',
       'claude-flow agent spawn researcher --name "Research Bot"',

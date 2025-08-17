@@ -2,6 +2,7 @@
 import process from 'process';
 import { initCommand } from './simple-commands/init/index.js';
 import { memoryCommand } from './simple-commands/memory.js';
+import { memoryConsolidationCommand } from './simple-commands/memory-consolidation.js';
 import { sparcCommand } from './simple-commands/sparc.js';
 import { agentCommand } from './simple-commands/agent.js';
 import { taskCommand } from './simple-commands/task.js';
@@ -108,6 +109,32 @@ First-time users should run: npx claude-flow@latest init --sparc`,
       'memory stats',
       'memory export backup.json',
     ],
+  });
+
+  commandRegistry.set('memory-consolidate', {
+    handler: memoryConsolidationCommand,
+    description: 'Consolidate fragmented memory stores into unified database',
+    usage: 'memory-consolidate <command> [options]',
+    examples: [
+      'memory-consolidate scan                # Scan for all memory stores',
+      'memory-consolidate plan                # Create consolidation plan',
+      'memory-consolidate execute --force     # Execute consolidation',
+      'memory-consolidate report              # Generate report',
+    ],
+    details: `
+Memory Consolidation Features:
+  • Discovers all memory storage locations (JSON & SQLite)
+  • Creates automatic backups before consolidation
+  • Merges all stores into unified SQLite database
+  • Optimizes with indices for better performance
+  • Maintains backward compatibility
+  
+Benefits:
+  • Single source of truth for all memory data
+  • Improved query performance with indices
+  • Reduced disk fragmentation
+  • Easier backup and restore
+  • Cross-session persistence`,
   });
 
   commandRegistry.set('sparc', {
@@ -411,20 +438,30 @@ Helps with performance optimization, cost management, and resource allocation.`,
 
   commandRegistry.set('automation', {
     handler: automationAction,
-    description: 'Intelligent agent and workflow management',
+    description: 'Intelligent agent and workflow management with MLE-STAR and Claude integration',
     usage: 'automation <command> [options]',
     examples: [
       'automation auto-agent --task-complexity enterprise --swarm-id swarm-123',
       'automation smart-spawn --requirement "web-development" --max-agents 8',
       'automation workflow-select --project-type api --priority speed',
+      'automation run-workflow my-workflow.json --claude --non-interactive',
+      'automation mle-star --dataset data/train.csv --target price --claude',
     ],
     details: `
 Automation commands:
   • auto-agent: Automatically spawn optimal agents based on task complexity
   • smart-spawn: Intelligently spawn agents based on specific requirements
   • workflow-select: Select and configure optimal workflows for project types
+  • run-workflow: Execute workflows from JSON/YAML files with Claude integration
+  • mle-star: Run MLE-STAR Machine Learning Engineering workflow (flagship)
   
-Provides optimal resource allocation and intelligent agent selection.`,
+New features:
+  • Claude CLI integration for actual execution
+  • MLE-STAR methodology for ML engineering
+  • Non-interactive mode for CI/CD integration
+  • Comprehensive workflow templates
+  
+Provides optimal resource allocation, intelligent agent selection, and complete automation workflows.`,
   });
 
   commandRegistry.set('coordination', {
@@ -502,6 +539,228 @@ For more information: https://github.com/ruvnet/claude-flow/issues/166`,
   commandRegistry.set('fix-hook-variables', {
     handler: fixHookVariablesCommand,
     ...fixHookVariablesCommandConfig,
+  });
+
+  // Verification system commands
+  commandRegistry.set('verify', {
+    handler: async (args, flags) => {
+      try {
+        const { verificationCommand } = await import('./simple-commands/verification.js');
+        return await verificationCommand(args, flags);
+      } catch (error) {
+        console.error('❌ Error loading verification module:', error.message);
+        console.log('Error details:', error);
+      }
+    },
+    description: '🔍 Verification and truth enforcement system',
+    usage: 'verify <subcommand> [options]',
+    examples: [
+      'verify status                    # Show verification system status',
+      'verify check --taskId task-123   # Run verification checks',
+      'verify validate --taskId task-456 # Validate task results',
+      'verify config                    # Manage verification config',
+      'verify cleanup --force           # Clean up old verification data',
+    ],
+    details: `
+Verification system commands:
+  • status: Show current system status and health
+  • check: Run verification checks on tasks
+  • validate: Validate task completion and results
+  • config: Manage verification configuration
+  • cleanup: Clean up old verification data
+  • pre-task: Execute pre-task verification
+  • post-task: Execute post-task validation
+  • integration: Run integration tests
+  • truth: Execute truth telemetry checks
+  • rollback: Trigger rollback if needed
+
+Truth enforcement features:
+  • 0.95 minimum truth threshold
+  • Cross-agent integration testing
+  • Automated rollback on failures
+  • Cryptographic verification
+  • Byzantine fault tolerance`,
+  });
+
+  commandRegistry.set('truth', {
+    handler: async (args, flags) => {
+      try {
+        const { truthCommand } = await import('./simple-commands/verification.js');
+        return await truthCommand(args, flags);
+      } catch (error) {
+        console.error('❌ Error loading verification module:', error.message);
+        console.log('Error details:', error);
+      }
+    },
+    description: '🎯 Truth telemetry and accuracy scoring',
+    usage: 'truth [options]',
+    examples: [
+      'truth                            # Show current truth scores',
+      'truth --taskId task-123          # Check truth for specific task',
+      'truth --threshold 0.95           # Set minimum truth threshold',
+      'truth --report                   # Generate truth report',
+    ],
+    details: `
+Truth scoring system:
+  • Real-time truth metrics collection
+  • Agent performance scoring
+  • System-wide truth accuracy tracking
+  • Automated alerting for threshold violations
+  • Dashboard data export functionality
+
+Target metrics:
+  • >95% truth accuracy rate
+  • <10% human intervention rate
+  • >90% integration success rate
+  • <5% automated rollback frequency`,
+  });
+
+  commandRegistry.set('pair', {
+    handler: async (args, flags) => {
+      try {
+        const pairCommand = (await import('./simple-commands/pair.js')).default;
+        return await pairCommand(args, flags);
+      } catch (error) {
+        console.error('❌ Error loading pair module:', error.message);
+        console.log('Error details:', error);
+      }
+    },
+    description: '👥 Interactive pair programming with AI assistance',
+    usage: 'pair [options]',
+    examples: [
+      'pair --start                     # Start pair programming session',
+      'pair --start --mode driver       # You write, AI assists',
+      'pair --start --verify --test     # Enable verification and testing',
+      'pair --status                    # Show session status',
+      'pair --end                       # End current session',
+    ],
+    details: `
+Pair programming features:
+  • Three modes: driver, navigator, switch
+  • Real-time code assistance
+  • Optional verification and testing
+  • Session persistence
+  • Background execution support`,
+  });
+
+  commandRegistry.set('verify-train', {
+    handler: async (args, flags) => {
+      try {
+        const { verificationTrainingCommand } = await import('./simple-commands/verification-training-integration.js');
+        return await verificationTrainingCommand(args, flags);
+      } catch (error) {
+        console.error('❌ Error loading verification-training module:', error.message);
+        console.log('Error details:', error);
+      }
+    },
+    description: '🧠 Verification-Training integration for continuous improvement',
+    usage: 'verify-train <command> [options]',
+    examples: [
+      'verify-train status              # Show training status',
+      'verify-train feed                # Feed verification data to training',
+      'verify-train predict coder       # Predict verification outcome',
+      'verify-train recommend           # Get agent recommendations',
+      'verify-train train               # Trigger neural training',
+    ],
+    details: `
+Verification-Training Integration:
+  • Feeds verification results to training system
+  • Learns from agent performance over time
+  • Predicts verification outcomes
+  • Recommends best agents for tasks
+  • Improves reliability through continuous learning`,
+  });
+
+  commandRegistry.set('train-pipeline', {
+    handler: async (args, flags) => {
+      try {
+        // Always use real execution - no more simulation
+        const { trainingPipelineCommand } = await import('./simple-commands/training-pipeline.js');
+        return await trainingPipelineCommand(args, flags);
+      } catch (error) {
+        console.error('❌ Error loading training-pipeline module:', error.message);
+        console.log('Error details:', error);
+      }
+    },
+    description: '🚀 Real training pipeline with actual code execution and learning',
+    usage: 'train-pipeline <command> [options]',
+    examples: [
+      'train-pipeline run               # Run training with real code',
+      'train-pipeline run --complexity hard --iterations 5',
+      'train-pipeline generate          # Generate real training tasks',
+      'train-pipeline validate          # Validate current performance',
+      'train-pipeline status            # Show pipeline status with real metrics',
+    ],
+    details: `
+Real Training Pipeline Features:
+  • Creates actual code files and tests
+  • Runs real npm test commands
+  • Learns from actual test results
+  • Validates improvements with real metrics
+  • Applies learned optimizations to production
+  
+Pipeline Stages:
+  1. Generate real code tasks (easy/medium/hard)
+  2. Execute with different strategies using npm
+  3. Learn from real test results
+  4. Validate actual improvements
+  5. Apply to production configuration
+  
+Options:
+  --complexity <level> Task complexity (easy/medium/hard)
+  --iterations <n>     Number of training iterations`,
+  });
+
+  commandRegistry.set('stream-chain', {
+    handler: async (args, flags) => {
+      try {
+        const { streamChainCommand } = await import('./simple-commands/stream-chain.js');
+        return await streamChainCommand(args, flags);
+      } catch (error) {
+        console.error('❌ Error loading stream-chain module:', error.message);
+        console.log('Error details:', error);
+      }
+    },
+    description: '🔗 Connect multiple Claude instances via stream-json for chained workflows',
+    usage: 'stream-chain <subcommand> [options]',
+    examples: [
+      'stream-chain run "analyze" "design" "implement"  # Custom chain',
+      'stream-chain demo                                 # Run demo chain', 
+      'stream-chain pipeline analysis                    # Run analysis pipeline',
+      'stream-chain test                                 # Test stream connection',
+      'stream-chain help                                 # Show detailed help',
+    ],
+    details: `
+📚 SUBCOMMANDS
+    run <p1> <p2> [...]  Execute custom chain (min 2 prompts)
+    demo                 Run 3-step demo chain
+    pipeline <type>      Run predefined pipeline (analysis/refactor/test/optimize)
+    test                 Test stream connection
+    help                 Show comprehensive documentation
+
+⚙️  OPTIONS
+    --verbose            Show detailed execution info
+    --timeout <seconds>  Timeout per step (default: 30)
+    --debug              Enable debug mode
+
+🔄 STREAM CHAINING
+    Chains multiple Claude Code calls with context preservation:
+    • Step 1 outputs stream-json → Step 2 receives context → Step 3...
+    • 100% context preservation between steps
+    • Real execution with Claude Code (not simulated)
+
+🚀 PIPELINES
+    analysis  - Analyze → Identify issues → Generate report
+    refactor  - Find opportunities → Create plan → Apply changes
+    test      - Analyze coverage → Design cases → Generate tests
+    optimize  - Profile code → Find bottlenecks → Apply optimizations
+
+⚡ PERFORMANCE
+    • Latency: ~10-30s per step
+    • Context: Full preservation
+    • Streaming: No intermediate files
+
+📖 For full documentation: stream-chain help`,
   });
 
   commandRegistry.set('hive', {
@@ -756,6 +1015,7 @@ export function showCommandHelp(name) {
     name: `claude-flow ${name}`,
     description: HelpFormatter.stripFormatting(command.description),
     usage: `claude-flow ${command.usage}`,
+    details: command.details, // Pass through the details section
   };
 
   // Parse examples
