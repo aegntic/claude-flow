@@ -49,6 +49,21 @@ export interface GraphitiEdge {
   validUntil?: Date;
 }
 
+export interface GraphitiMetrics {
+  operationLatency: Map<string, number[]>;
+  successCount: Map<string, number>;
+  errorCount: Map<string, number>;
+  retryCount: Map<string, number>;
+  lastUpdated: Date;
+}
+
+export interface RetryOptions {
+  maxAttempts: number;
+  baseDelay: number;
+  maxDelay: number;
+  backoffMultiplier: number;
+}
+
 export interface GraphitiEpisode {
   uuid: string;
   name: string;
