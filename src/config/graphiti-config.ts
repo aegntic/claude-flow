@@ -4,6 +4,8 @@
  * Enables knowledge graph-based memory and collective intelligence
  */
 
+import { z } from 'zod';
+
 export interface GraphitiConfiguration {
   enabled: boolean;
   mcp: {
