@@ -104,20 +104,33 @@ export async function checkGraphitiAvailability(): Promise<boolean> {
 }
 
 /**
- * Get Graphiti configuration with runtime checks
+ * Get Graphiti configuration with runtime checks and validation
+ * Enhanced with ruvnet's suggestions for validation and sanitization
  */
-export async function getGraphitiConfig(): Promise<GraphitiConfiguration> {
-  const config = { ...defaultGraphitiConfig };
-  config.mcp.available = await checkGraphitiAvailability();
+export async function getGraphitiConfig(userConfig?: Partial<GraphitiConfiguration>): Promise<GraphitiConfiguration> {
+  // Merge user config with defaults
+  const config = { 
+    ...defaultGraphitiConfig,
+    ...userConfig 
+  };
   
-  if (!config.mcp.available) {
+  // Validate configuration
+  const validatedConfig = validateGraphitiConfig(config);
+  
+  // Sanitize configuration
+  const sanitizedConfig = sanitizeGraphitiConfig(validatedConfig);
+  
+  // Runtime availability check
+  sanitizedConfig.mcp.available = await checkGraphitiAvailability();
+  
+  if (!sanitizedConfig.mcp.available) {
     console.warn('Graphiti MCP server not available, some features will be limited');
     // Disable features that require MCP server
-    config.memory.adapter.enableAutoSync = false;
-    config.hiveMind.integration.enableKnowledgeEvolution = false;
+    sanitizedConfig.memory.adapter.enableAutoSync = false;
+    sanitizedConfig.hiveMind.integration.enableKnowledgeEvolution = false;
   }
   
-  return config;
+  return sanitizedConfig;
 }
 
 // Zod schema for configuration validation (as suggested by ruvnet)
